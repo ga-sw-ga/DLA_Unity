@@ -8,14 +8,17 @@ public class Walker : MonoBehaviour
     public bool isStuck;
 
     private Rigidbody _rigidbody;
+    private MeshRenderer _meshRenderer;
     private Vector3 _currentVelocity;
+    private float _currentColorHue;
 
     public bool IsStuck => isStuck;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        transform.GetComponent<MeshRenderer>().material = new Material(transform.GetComponent<MeshRenderer>().material);
+        _meshRenderer = transform.GetComponent<MeshRenderer>();
+        _meshRenderer.material = new Material(_meshRenderer.material);
     }
 
     private void Start()
@@ -23,8 +26,17 @@ public class Walker : MonoBehaviour
         if (isStuck)
         {
             _rigidbody.isKinematic = true;
-            transform.GetComponent<MeshRenderer>().material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
+            _meshRenderer.material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
             WalkerManager.Instance.RecalculateStructureRadius();
+        }
+    }
+
+    private void Update()
+    {
+        if (IsStuck && !Mathf.Approximately(_currentColorHue, WalkerManager.Instance.particleHue))
+        {
+            _meshRenderer.material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
+            _currentColorHue = WalkerManager.Instance.particleHue;
         }
     }
 
@@ -60,7 +72,7 @@ public class Walker : MonoBehaviour
                 transform.position = stuckWalker.position +
                                      (transform.position - stuckWalker.position).normalized * transform.localScale.x;
             }
-            transform.GetComponent<MeshRenderer>().material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
+            _meshRenderer.material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
             transform.parent = GameObject.FindWithTag("StructureRoot").transform;
             WalkerManager.Instance.RecalculateStructureRadius();
         }
