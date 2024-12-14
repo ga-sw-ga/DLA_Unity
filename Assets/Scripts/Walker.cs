@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Walker : MonoBehaviour
 {
-    public bool isStuck;
+    public bool isStuck, is3D;
 
     private Rigidbody _rigidbody;
     private MeshRenderer _meshRenderer;
@@ -23,11 +23,19 @@ public class Walker : MonoBehaviour
 
     private void Start()
     {
+        is3D = WalkerManager.Instance.is3D;
+
         if (isStuck)
         {
             _rigidbody.isKinematic = true;
             _meshRenderer.material.color = Color.HSVToRGB(WalkerManager.Instance.particleHue, 1f, Mathf.Min(1f, 0.1f + transform.position.magnitude * 0.05f));
             WalkerManager.Instance.RecalculateStructureRadius();
+        }
+
+        if (!is3D)
+        {
+            _rigidbody.constraints = RigidbodyConstraints.FreezePositionZ;
+            transform.position = new Vector3(transform.position.x, transform.position.y, 0f);
         }
     }
 
@@ -45,8 +53,17 @@ public class Walker : MonoBehaviour
         if (!IsStuck)
         {
             Vector3 targetVelocity = Vector3.zero;
-        
-            Vector3 randomVelocityDir = VectorUtils.RandomVectorOnSphere(Vector3.zero, 1f);
+            Vector3 randomVelocityDir = Vector3.zero;
+
+            if (is3D)
+            {
+                randomVelocityDir = VectorUtils.RandomVectorOnSphere(Vector3.zero, 1f);
+            }
+            else
+            {
+                randomVelocityDir = VectorUtils.RandomVectorOnCircle(Vector2.zero, 1f);
+            }
+
             targetVelocity += randomVelocityDir;
         
             float distanceFromCenter = Vector3.Distance(Vector3.zero, transform.position);

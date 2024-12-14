@@ -6,6 +6,23 @@ using Random = UnityEngine.Random;
 
 public static class VectorUtils
 {
+    public static Vector2 RandomVectorOnCircle(Vector2 center, float radius)
+    {
+        Vector2 output;
+        float x = Random.Range(-1f * Mathf.Abs(radius), Mathf.Abs(radius));
+        float y = ((Random.Range(-1f, 1f) < 0f) ? -1f : 1f) * Mathf.Sqrt((radius * radius) - (x * x));
+        if (float.IsNaN(y))
+        {
+            y = 0;
+        }
+        if (float.IsNaN(x))
+        {
+            x = 0;
+        }
+        output = new Vector2(x, y) + center;
+        return output;
+    }
+
     public static Vector3 RandomVectorInsideSphere(Vector3 center, float radius)
     {
         Vector3 output;

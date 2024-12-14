@@ -9,7 +9,8 @@ public class WalkerManager : MonoBehaviour
     public static WalkerManager Instance;
     
     public GameObject walkerObject;
-    
+
+    public bool is3D;
     public float walkerZoneRadius;
     public float targetWalkerCount;
     public float forceMagnitude;
@@ -18,6 +19,7 @@ public class WalkerManager : MonoBehaviour
     public float particleHue;
     [HideInInspector] public float maxWalkerCenterDistance;
 
+    private Transform _structureRoot;
     private float _structureRadius = 0f;
 
     private Slider _walkerZoneRadiusSlider;
@@ -33,6 +35,7 @@ public class WalkerManager : MonoBehaviour
     {
         Instance = this;
 
+        _structureRoot = GameObject.FindWithTag("StructureRoot").transform;
         maxWalkerCenterDistance = walkerZoneRadius;
         
         _walkerZoneRadiusSlider = GameObject.Find("ZoneRadiusS").GetComponent<Slider>();
@@ -66,15 +69,66 @@ public class WalkerManager : MonoBehaviour
     
     public void RecalculateStructureRadius()
     {
-        Transform structureRoot = GameObject.FindWithTag("StructureRoot").transform;
-        Transform latestChild = structureRoot.GetChild(structureRoot.childCount - 1);
+        Transform latestChild = _structureRoot.GetChild(_structureRoot.childCount - 1);
         _structureRadius = Mathf.Max(latestChild.position.magnitude, _structureRadius);
         maxWalkerCenterDistance = walkerZoneRadius + _structureRadius;
     }
 
+    public void ToggleDimension()
+    {
+        is3D = !is3D;
+    }
+
+    public void ResetSim()
+    {
+        int numberOfChildren = transform.childCount;
+        List<Transform> children = new List<Transform>();
+
+        for (int i = 0; i < numberOfChildren; i++)
+        {
+            if (i != 0) // Exclude the first child
+            {
+                children.Add(transform.GetChild(i));
+            }
+        }
+
+        foreach (Transform child in children)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        numberOfChildren = _structureRoot.childCount;
+        children.Clear(); // Reuse the list for _structureRoot
+
+        for (int i = 0; i < numberOfChildren; i++)
+        {
+            if (i != 0) // Exclude the first child
+            {
+                children.Add(_structureRoot.GetChild(i));
+            }
+        }
+
+        foreach (Transform child in children)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        _structureRadius = 0f;
+        maxWalkerCenterDistance = walkerZoneRadius;
+    }
+
     private void CreateWalker(float distanceFromCenter)
     {
-        Vector3 position = VectorUtils.RandomVectorOnSphere(Vector3.zero, distanceFromCenter);
+        Vector3 position = Vector3.zero;
+        if (is3D)
+        {
+            position = VectorUtils.RandomVectorOnSphere(Vector3.zero, distanceFromCenter);
+        }
+        else
+        {
+            position = VectorUtils.RandomVectorOnCircle(Vector2.zero, distanceFromCenter);
+            position.z = 0f;
+        }
         GameObject walker = Instantiate(walkerObject, position, Quaternion.identity, transform);
     }
 
